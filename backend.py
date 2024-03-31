@@ -6,8 +6,6 @@ app = Flask(__name__)
 def calculate_cpm():
     data = request.get_json()
     activities = data['activities']
-
-
     for activity in activities:
         activity['ES'] = 0
         activity['EF'] = 0

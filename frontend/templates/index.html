@@ -28,7 +28,7 @@
             <tr>
                 <th>Task Name</th>
                 <th>Duration</th>
-                <th>Dependencies</th>
+                <th>Relation</th> <!-- New column for relation -->
                 <th>In CPM</th>
                 <th>Action</th>
             </tr>
@@ -39,7 +39,7 @@
             <tr>
                 <td>{{ task.name }}</td>
                 <td>{{ task.duration }}</td>
-                <td>{{ task.dependencies }}</td>
+                <td>{{ task.relation }}</td> <!-- Display relation for each task -->
                 <td>{{ task.in_cpm }}</td>
                 <td>
                     <form action="/delete_task" method="post">
@@ -55,7 +55,7 @@
     <form id="task-form">
         <input type="text" name="name" placeholder="Task Name" required>
         <input type="number" name="duration" placeholder="Duration" required>
-        <input type="text" name="dependencies" placeholder="Dependencies (comma-separated)">
+        <input type="text" name="relation" placeholder="Relation">
         <input type="hidden" name="in_cpm" value="false">
         <button type="button" onclick="addTask()">Add Task</button>
     </form>
@@ -72,62 +72,28 @@
     </script>
 
     <script>
-        function addTask() {
+            function addTask() {
             const form = document.getElementById('task-form');
             const formData = new FormData(form);
-            
-            // Check if dependencies are empty
-            const dependencies = formData.get('dependencies');
-            if (dependencies.trim() === '') {
-                // If dependencies are empty, submit the form
-                submitForm(formData);
-                return;
-            }
-            
-            // Convert dependencies string to an array separated by commas
-            const dependenciesArray = dependencies.split(',').map(dependency => dependency.trim());
-            
-            // Check if all dependencies exist
-            const existingTasks = Array.from(document.querySelectorAll('#task-table tbody tr')).map(row => row.cells[0].textContent.trim());
-            const invalidDependencies = dependenciesArray.filter(dependency => !existingTasks.includes(dependency));
-            if (invalidDependencies.length > 0) {
-                // If any dependency does not exist, show an alert
-                alert(`The following dependencies do not exist: ${invalidDependencies.join(', ')}`);
-                return;
-            }
-            
-            // Replace the dependencies value in the form data with the array
-            formData.set('dependencies', JSON.stringify(dependenciesArray));
-            
-            // Submit the form
-            submitForm(formData);
-        }
-        
-        function submitForm(formData) {
             const xhr = new XMLHttpRequest();
             xhr.open("POST", "/add_task", true);
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4 && xhr.status === 200) {
                     console.log(xhr.responseText);
-                    location.reload(); // Refresh the page after adding task
-                    
-
+                    location.reload();
                 }
             };
             xhr.send(new URLSearchParams(formData).toString());
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Add event delegation for delete buttons
             document.getElementById('task-table').addEventListener('click', function(event) {
                 if (event.target.classList.contains('delete-btn')) {
                     event.preventDefault();
                     event.target.closest('form').submit();
                 }
             });
-
-            
         });
     </script>
 </body>
