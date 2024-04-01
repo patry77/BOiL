@@ -1,1 +1,1 @@
-[]
+[{"name": "A", "duration": 2, "relation": "1-2", "in_cpm": false}, {"name": "B", "duration": 23, "relation": "2-3", "in_cpm": false}, {"name": "C", "duration": 45, "relation": "2-4", "in_cpm": false}, {"name": "D", "duration": 12, "relation": "1-4", "in_cpm": false}, {"name": "E", "duration": 2, "relation": "2-1", "in_cpm": false}]
