@@ -1,31 +1,24 @@
-import re
-import json
-import networkx as nx
-import plotly.graph_objs as go
-from plotly.utils import PlotlyJSONEncoder
 from CreatePlot import *
-from fastapi import FastAPI, HTTPException, Request, Form
-from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from task_methods import *
+from fastapi import FastAPI, Request, Form
 from fastapi.templating import Jinja2Templates
-import pdb
-
+from fastapi.responses import HTMLResponse, RedirectResponse
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 tasks = []
-tasks_file = "tasks.json"
+# tasks_file = "tasks.json"
 
-def load_tasks():
-    try:
-        with open(tasks_file, "r") as file:
-            tasks = json.load(file)
-    except FileNotFoundError:
-        tasks = []
-    return tasks
+# def load_tasks():
+#     try:
+#         with open(tasks_file, "r") as file:
+#             tasks = json.load(file)
+#     except FileNotFoundError:
+#         tasks = []
+#     return tasks
 
-def save_tasks(tasks):
-    with open(tasks_file, "w") as file:
-        json.dump(tasks, file)
+# def save_tasks(tasks):
+#     with open(tasks_file, "w") as file:
+#         json.dump(tasks, file)
 
 tasks = load_tasks()
 

@@ -3,6 +3,7 @@ import networkx as nx
 import requests as req
 import plotly.graph_objs as go
 from plotly.utils import PlotlyJSONEncoder
+from task_methods import load_tasks, save_tasks
 
 URL = 'http://localhost:5000/cpm'
 
@@ -25,7 +26,15 @@ def task_to_send(tasks):
 def make_request(tasks):
     data = task_to_send(tasks)
     response = req.post(URL, json=data)
+    update_tasks(response.json())
     return response.json()
+
+def update_tasks(response):
+    tasks = load_tasks()
+    name_values = list(map(lambda x: [x['name'], x['isCritical']], response))
+    for nv in name_values:
+        [t for t in tasks if t['name'] == nv[0]][0]['in_cpm'] = nv[1]
+    save_tasks(tasks)
 
 def create_nodes(tasks):
     name_nodes = set()
@@ -74,7 +83,7 @@ def generate_graph_data(tasks):
                    duration=edge['duration'],
                    )
         
-    pos = nx.spring_layout(G)
+    pos = nx.fruchterman_reingold_layout(G)
     edge_trace = go.Scatter(
         x=[],
         y=[],
@@ -82,9 +91,24 @@ def generate_graph_data(tasks):
         mode='markers+lines',
         marker={'color': []},
         text=[],
-        # line=dict(width=0.5, color=[], colorscale='Viridis'),
     )
-    
+
+    xt = []
+    yt = []
+    tasks_text = []
+    for e in G.edges():
+        tasks_text.append([ t['name'] for t in tasks if t['relation'] == '-'.join(e)][0])
+        mid_edge = 0.5*(pos[e[0]]+pos[e[1]])# mid point of the edge e
+        xt.append(mid_edge[0])
+        yt.append(mid_edge[1])
+        
+    trace_text = go.Scatter(x=xt, y=yt, 
+                       mode='text',
+                       textfont=dict(size=50, color='rgb(25,25,25)'),
+                       text=tasks_text,
+                       textposition='bottom center', hoverinfo='text')
+        
+        
     edge_list = []
     for edge in G.edges():
         if edge[0] == edge[1]:
@@ -100,9 +124,7 @@ def generate_graph_data(tasks):
                    y=tuple([y0, y1, None])
                    )
         )
-
-
-
+        
     for edge in G.edges():
         if edge[0] == edge[1]:
             continue 
@@ -111,14 +133,13 @@ def generate_graph_data(tasks):
         x1, y1 = pos[edge[1]]
         edge_trace['x'] += tuple([x0, x1, None])
         edge_trace['y'] += tuple([y0, y1, None])
-        # edge_trace['line']['color'] += [get_color(actual_edge.get('isCritical'))]  # Set edge color
 
 
     node_trace = go.Scatter(
         x=[],
         y=[],
         text=[],
-        mode='markers+text',
+        mode='markers',
         hoverinfo='text',
         textposition='top center',
         marker=dict(
@@ -129,16 +150,18 @@ def generate_graph_data(tasks):
             size=40
             )
         )
+    def create_text(node):
+        return f"{node['name']}<br>ES: {node['ES']}<br>EF: {node['EF']}<br>LS: {node['LS']}<br>LF: {node['LF']}<bt> I"
 
     for node in G.nodes():
         x, y = pos[node]
         actual_node = [k for k in nodes if k['name'] == node][0]
         node_trace['x'] += tuple([x])
         node_trace['y'] += tuple([y])
-        node_trace['text'] += tuple([f"{node}"])
+        node_trace['text'] += tuple([create_text(actual_node)])
         node_trace['marker']['color'] += tuple([get_color(actual_node.get('isCritical'))])
 
-    graph_data = {"data": [edge_trace, node_trace] + edge_list, "layout": dict(
+    graph_data = {"data": [edge_trace, node_trace, trace_text] + edge_list, "layout": dict(
         hovermode='closest',
         xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
