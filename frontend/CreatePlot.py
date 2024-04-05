@@ -151,7 +151,7 @@ def generate_graph_data(tasks):
             )
         )
     def create_text(node):
-        return f"{node['name']}<br>ES: {node['ES']}<br>EF: {node['EF']}<br>LS: {node['LS']}<br>LF: {node['LF']}<bt> I"
+        return f"{node['name']}<br>ES: {node['ES']}<br>EF: {node['EF']}<br>LS: {node['LS']}<br>LF: {node['LF']}<br>"
 
     for node in G.nodes():
         x, y = pos[node]

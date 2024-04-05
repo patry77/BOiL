@@ -6,20 +6,6 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
 tasks = []
-# tasks_file = "tasks.json"
-
-# def load_tasks():
-#     try:
-#         with open(tasks_file, "r") as file:
-#             tasks = json.load(file)
-#     except FileNotFoundError:
-#         tasks = []
-#     return tasks
-
-# def save_tasks(tasks):
-#     with open(tasks_file, "w") as file:
-#         json.dump(tasks, file)
-
 tasks = load_tasks()
 
 @app.get("/", response_class=HTMLResponse)
@@ -34,7 +20,11 @@ async def add_task(request: Request, name: str = Form(...), duration: int = Form
         "relation": relation, # New field for relation
         "in_cpm": in_cpm,
     }
-    tasks.append(new_task)
+    existing_task = [ i for i in range(len(tasks)) if tasks[i]['name'] == new_task["name"]]
+    if len(existing_task) != 0:
+        tasks[existing_task[0]] = new_task
+    else:
+        tasks.append(new_task)
     save_tasks(tasks)
     return {"message": "Task added successfully"}
 
