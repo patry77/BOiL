@@ -1,3 +1,4 @@
+import re
 from CreatePlot import *
 from task_methods import *
 from fastapi import FastAPI, Request, Form
@@ -21,6 +22,9 @@ async def add_task(request: Request, name: str = Form(...), duration: int = Form
         "relation": relation, # New field for relation
         "in_cpm": in_cpm,
     }
+    if  not re.match(r'^\d+-\d+$', new_task['relation']):
+        return {"error": "Relation must be in format 'number-number'"}
+    
     existing_task = [ i for i in range(len(tasks)) if tasks[i]['name'] == new_task["name"]]
     if len(existing_task) != 0:
         tasks[existing_task[0]] = new_task

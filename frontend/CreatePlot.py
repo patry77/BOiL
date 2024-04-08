@@ -64,28 +64,23 @@ def create_nodes(tasks):
 def get_pos(nodes, edges):
     x0 = -1
     y0 = 0
-    max_y = 2
+    max_y = 20
     pos = {}
     for node in nodes:
         if str(node) not in pos.keys():
             pos[str( node )] = np.array([x0, y0])
         x0 += 2.5
         next_nodes = [edge[-1] for edge in edges if  str(node) == edge[0] ]
-        if len(next_nodes) == 0:
+        if len(next_nodes) < 2:
             continue
-        y0 +=1
-        step = (max_y / len(next_nodes))*3.5
+        step = (max_y // len(next_nodes))
         divsion  = 1
         for next_node in next_nodes:
-            y0 -= (step)*divsion+randint(3, 10)
             divsion *= -1
             if next_node in pos.keys():
                 continue
-            pos[next_node] = np.array ([x0, (y0 + step) * divsion])
-            y0 -= step*2
-        print([node, pos ])
-
-        x0 += 4.5
+            pos[next_node] = np.array ([x0, (0 + step) * divsion])            
+        x0 += 2.5
 
     return pos
 
