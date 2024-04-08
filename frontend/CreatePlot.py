@@ -6,6 +6,7 @@ import requests as req
 from random import randint
 import plotly.express as px
 import plotly.graph_objs as go
+import plotly.figure_factory as ff
 from datetime import datetime, timedelta 
 from plotly.utils import PlotlyJSONEncoder
 from task_methods import load_tasks, save_tasks
@@ -207,7 +208,6 @@ def generate_graph_data(tasks):
 
     return json.dumps(graph_data, cls=PlotlyJSONEncoder)
 
-
 def create_gantt_plot():
     tasks = load_tasks()
     start_date = datetime.now()
@@ -220,8 +220,9 @@ def create_gantt_plot():
             relations_time[relations[1]] = start_date + timedelta(days=task['duration'])
         else:
             relations_time[relations[1]] = relations_time[relations[0]] + timedelta(days=task['duration'])
-        jobs.append({'task': task['name'], 'start': relations_time[relations[0]].strftime("%Y-%m-%d"), 'end': relations_time[relations[1]].strftime("%Y-%m-%d"), 'in_cpm': task['in_cpm'] })
+        jobs.append({'Task': task['name'], 'Start': relations_time[relations[0]].strftime("%Y-%m-%d"), 'Finish': relations_time[relations[1]].strftime("%Y-%m-%d"), 'in_cpm': task['in_cpm'] })
     df = pd.DataFrame(jobs)
-    fig = px.timeline(df, x_start="start", x_end="end", y="task", color="in_cpm")
+    colors = {True: 'rgb(220, 0, 0)', False: 'rgb(0, 255, 100)'}
+    fig = ff.create_gantt(df, colors=colors, index_col='in_cpm', show_colorbar=True)
     fig.update_yaxes(autorange="reversed")
     return json.dumps({'data': fig.data, 'layout': fig.layout }, cls=PlotlyJSONEncoder)
