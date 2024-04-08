@@ -10,7 +10,8 @@ tasks = load_tasks()
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, 'graph_data':  generate_graph_data(load_tasks())})
+    print(tasks)
+    return templates.TemplateResponse("index.html", {"request": request, "tasks": tasks, 'graph_data':  generate_graph_data(load_tasks()), 'gantt_chart': create_gantt_plot()})
 
 @app.post("/add_task")
 async def add_task(request: Request, name: str = Form(...), duration: int = Form(...), relation: str = Form(...), in_cpm: bool = Form(...)):

@@ -146,6 +146,15 @@
         </script>
     </div>
 
+
+    <h1>Gantt Chart</h1>
+    <div id="gantt-container">
+        <script>
+            var graphData = {{ gantt_chart | safe }};
+            Plotly.newPlot('gantt-container', graphData.data, graphData.layout);
+        </script>
+    </div>
+
     <script>
             function addTask() {
             const form = document.getElementById('task-form');

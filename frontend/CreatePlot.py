@@ -1,7 +1,12 @@
 import json
+import numpy as np
+import pandas as pd
 import networkx as nx
 import requests as req
+from random import randint
+import plotly.express as px
 import plotly.graph_objs as go
+from datetime import datetime, timedelta 
 from plotly.utils import PlotlyJSONEncoder
 from task_methods import load_tasks, save_tasks
 
@@ -54,6 +59,35 @@ def create_nodes(tasks):
         ]
     return nodes
 
+
+def get_pos(nodes, edges):
+    x0 = -1
+    y0 = 0
+    max_y = 2
+    pos = {}
+    for node in nodes:
+        if str(node) not in pos.keys():
+            pos[str( node )] = np.array([x0, y0])
+        x0 += 2.5
+        next_nodes = [edge[-1] for edge in edges if  str(node) == edge[0] ]
+        if len(next_nodes) == 0:
+            continue
+        y0 +=1
+        step = (max_y / len(next_nodes))*3.5
+        divsion  = 1
+        for next_node in next_nodes:
+            y0 -= (step)*divsion+randint(3, 10)
+            divsion *= -1
+            if next_node in pos.keys():
+                continue
+            pos[next_node] = np.array ([x0, (y0 + step) * divsion])
+            y0 -= step*2
+        print([node, pos ])
+
+        x0 += 4.5
+
+    return pos
+
 def create_edges(tasks):
     return [ 
             {
@@ -83,7 +117,8 @@ def generate_graph_data(tasks):
                    duration=edge['duration'],
                    )
         
-    pos = nx.fruchterman_reingold_layout(G)
+    # pos = nx.fruchterman_reingold_layout(G)
+    pos = get_pos(G.nodes(), G.edges())
     edge_trace = go.Scatter(
         x=[],
         y=[],
@@ -96,11 +131,13 @@ def generate_graph_data(tasks):
     xt = []
     yt = []
     tasks_text = []
+    division = 0.1
     for e in G.edges():
         tasks_text.append([ t['name'] for t in tasks if t['relation'] == '-'.join(e)][0])
         mid_edge = 0.5*(pos[e[0]]+pos[e[1]])# mid point of the edge e
         xt.append(mid_edge[0])
-        yt.append(mid_edge[1])
+        yt.append(mid_edge[1] + 0.5)
+        division *= -1
         
     trace_text = go.Scatter(x=xt, y=yt, 
                        mode='text',
@@ -169,3 +206,22 @@ def generate_graph_data(tasks):
     )}
 
     return json.dumps(graph_data, cls=PlotlyJSONEncoder)
+
+
+def create_gantt_plot():
+    tasks = load_tasks()
+    start_date = datetime.now()
+    relations_time = {}
+    jobs = []
+    for task in tasks:
+        relations = task['relation'].split('-')
+        if len(relations_time.keys()) == 0:
+            relations_time[relations[0]] = start_date
+            relations_time[relations[1]] = start_date + timedelta(days=task['duration'])
+        else:
+            relations_time[relations[1]] = relations_time[relations[0]] + timedelta(days=task['duration'])
+        jobs.append({'task': task['name'], 'start': relations_time[relations[0]].strftime("%Y-%m-%d"), 'end': relations_time[relations[1]].strftime("%Y-%m-%d"), 'in_cpm': task['in_cpm'] })
+    df = pd.DataFrame(jobs)
+    fig = px.timeline(df, x_start="start", x_end="end", y="task", color="in_cpm")
+    fig.update_yaxes(autorange="reversed")
+    return json.dumps({'data': fig.data, 'layout': fig.layout }, cls=PlotlyJSONEncoder)
